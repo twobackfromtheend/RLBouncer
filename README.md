@@ -12,3 +12,7 @@ Requires:
 - matplotlib for plotting
 - pandas for csv stuff.
 - numpy for data stuff.
+
+Simulations for the ~350 samples by chip here
+https://imgur.com/a/tUpPX
+Red is simulated. Black is actual.
