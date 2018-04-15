@@ -9,6 +9,7 @@ SIDE_WALL_DISTANCE = 4096
 BACK_WALL_DISTANCE = 5120
 CEILING_DISTANCE = 2044
 
+
 class Ball:
     csv_header = ['t', 'x', 'y', 'z', 'vx', 'vy', 'vz', 'rotx', 'roty', 'rotz', 'rotvx', 'rotvy', 'rotvz']
     ball_radius = 91.25
@@ -38,7 +39,7 @@ class Ball:
         :return:
         """
         starting_x_v = np.concatenate((self.sim_vars['position'], self.sim_vars['velocity']))
-        sim_data = self.simulate_time(self.df['t'].min(), self.df['t'].max(), 1 / 61.133, self.step_dt, starting_x_v)
+        sim_data = self.simulate_time(self.df['t'].min(), self.df['t'].max(), 1 / 120, self.step_dt, starting_x_v)
         return sim_data
 
     def simulate_time(self, start_time, end_time, time_step, step_func, starting_values):
@@ -117,9 +118,10 @@ class Ball:
 
         # if ang_vel > max rotation: normalise to 6
         ang_vel = self.sim_vars['ang_vel']
-        if ang_vel.dot(ang_vel) > self.ball_max_rotation_speed:
+        if ang_vel.dot(ang_vel) > self.ball_max_rotation_speed ** 2:
             ang_vel = ang_vel / np.sqrt(ang_vel.dot(ang_vel)) * self.ball_max_rotation_speed
             self.sim_vars['ang_vel'] = ang_vel
+
         return np.concatenate((v, a))
 
     def check_if_ball_leaving(self, x_v, normal_vector):
@@ -152,12 +154,12 @@ class Ball:
 
 
 if __name__ == '__main__':
-    # file_name = "episode_000218.csv"
+    # file_name = "episode_000008.csv"
     # file_path = os.path.join(os.getcwd(), 'data', file_name)
     # Ball(file_path)
 
-
     for file_name in os.listdir(os.path.join(os.getcwd(), 'data')):
         file_path = os.path.join(os.getcwd(), 'data', file_name)
+        print(file_path)
         Ball(file_path)
         # x = input('Press enter to continue...')

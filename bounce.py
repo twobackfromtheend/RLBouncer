@@ -28,4 +28,3 @@ def bounce(state, normal=GROUND_NORMAL):
     new_state = (vel + delta_v_perp + delta_v_para,
                  ang_vel + A * R * np.cross(delta_v_para, normal))
     return new_state
-
