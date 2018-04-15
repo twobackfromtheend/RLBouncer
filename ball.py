@@ -1,4 +1,5 @@
 import os
+import time
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -24,6 +25,8 @@ CURVE_Y_3 = BACK_WALL_DISTANCE - CURVE_RADIUS_3
 CURVE_Z_1 = CEILING_DISTANCE - CURVE_RADIUS_1
 CURVE_Z_2 = CURVE_RADIUS_2
 CURVE_Z_3 = CURVE_RADIUS_3
+
+SIMULATION_FPS = 120
 
 
 class Ball:
@@ -58,7 +61,8 @@ class Ball:
         :return:
         """
         starting_x_v = np.concatenate((self.sim_vars['position'], self.sim_vars['velocity']))
-        sim_data = self.simulate_time(self.df['t'].min(), self.df['t'].max(), 1 / 120, self.step_dt, starting_x_v)
+        sim_data = self.simulate_time(self.df['t'].min(), self.df['t'].max(), 1 / SIMULATION_FPS, self.step_dt,
+                                      starting_x_v)
         return sim_data
 
     def simulate_time(self, start_time, end_time, time_step, step_func, starting_values):
@@ -215,7 +219,6 @@ class Ball:
                 if self.check_if_ball_leaving(x_v, normal_vector):
                     collided = True
 
-
         # # Top Ramp X-axis
         # if abs(x) > wx / 2 - cR and z > cz and (abs(x) - cx) ** 2 + (z - cz) ** 2 > (cR - R) ** 2:
         #     a = math.atan2(z - cz, abs(x) - cx) / pi * 180
@@ -308,6 +311,7 @@ def save_all_for_data():
             print(file_path)
             Ball(file_path, show=False, save=True)
 
+
 if __name__ == '__main__':
     # file_name = "episode_000008.csv"
     # file_name = "episode_000003.csv"  # y+ bottom ramp
@@ -318,13 +322,15 @@ if __name__ == '__main__':
     # file_name = "episode_000035.csv"  # x- bottom
     # file_path = os.path.join(os.getcwd(), 'data', file_name)
     # Ball(file_path)
-
+    
     for file_name in os.listdir(os.path.join(os.getcwd(), 'data')):
         if file_name.endswith('.csv'):
-
             file_path = os.path.join(os.getcwd(), 'data', file_name)
-            print(file_path)
+            # print(file_path)
+            # start_time = time.time()
             Ball(file_path)
+            # parse_duration = time.time() - start_time
+            # print(parse_duration)
             # x = input('Press enter to continue...')
 
     # save_all_for_data()
