@@ -9,5 +9,6 @@ Thanks for the algorithm and datasets go to this guy.
 https://samuelpmish.github.io/notes/RocketLeague/ball_bouncing/
 
 Requires:
-matplotlib for plotting
-pandas + numpy for data stuff.
+- matplotlib for plotting
+- pandas for csv stuff.
+- numpy for data stuff.
