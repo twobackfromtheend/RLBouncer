@@ -6,8 +6,24 @@ import matplotlib.pyplot as plt
 import bounce
 
 SIDE_WALL_DISTANCE = 4096
-BACK_WALL_DISTANCE = 5120
+BACK_WALL_DISTANCE = 5140
 CEILING_DISTANCE = 2044
+CORNER_WALL_DISTANCE = 8000
+GOAL_X = 892.75
+GOAL_Z = 640
+x = 590
+# CURVE_RADIUS_1, CURVE_RADIUS_2, CURVE_RADIUS_3 = 520, 260, 190  # ramp radii
+CURVE_RADIUS_1, CURVE_RADIUS_2, CURVE_RADIUS_3 = x, x / 2, 175  # ramp radii
+
+CURVE_X_1 = SIDE_WALL_DISTANCE - CURVE_RADIUS_1
+CURVE_X_2 = SIDE_WALL_DISTANCE - CURVE_RADIUS_2
+CURVE_X_3 = SIDE_WALL_DISTANCE - CURVE_RADIUS_3
+CURVE_Y_1 = BACK_WALL_DISTANCE - CURVE_RADIUS_1
+# CURVE_Y_2 = BACK_WALL_DISTANCE - CURVE_RADIUS_2
+CURVE_Y_3 = BACK_WALL_DISTANCE - CURVE_RADIUS_3
+CURVE_Z_1 = CEILING_DISTANCE - CURVE_RADIUS_1
+CURVE_Z_2 = CURVE_RADIUS_2
+CURVE_Z_3 = CURVE_RADIUS_3
 
 
 class Ball:
@@ -18,12 +34,15 @@ class Ball:
     ball_max_speed = 6000
     ball_max_rotation_speed = 6
 
-    def __init__(self, file_path):
-        self.file_path = os.path.join(os.getcwd(), 'data', file_name)
+    def __init__(self, file_path, show=True, save=False):
+        self.file_path = os.path.join(os.getcwd(), 'data', file_path)
         self.df = pd.read_csv(self.file_path, header=None, names=self.csv_header)
         self.set_simulation_initial_variables()
         self.sim_data = self.predict_ball_positions()
-        self.plot_sim_data()
+        if show:
+            self.plot_sim_data()
+        if save:
+            self.save_sim_data()
 
     def set_simulation_initial_variables(self):
         self.sim_vars = {}
@@ -74,6 +93,75 @@ class Ball:
         v = x_v[3:]
         # calculate collisions
         collided = False
+        # ramps
+        # bottom y axis
+        if x[1] > CURVE_Y_3 and x[2] < CURVE_Z_3 and abs(x[0]) > GOAL_X and \
+                (abs(x[1]) - CURVE_Y_3) ** 2 + (x[2] - CURVE_Z_3) ** 2 > (CURVE_RADIUS_3 - self.ball_radius) ** 2:
+            surface_vector = np.array([0, CURVE_Y_3 - x[1], CURVE_Z_3 - x[2]])
+            normal_vector = surface_vector / np.sqrt(surface_vector.dot(surface_vector))
+            # print(t, x, normal_vector, surface_vector)
+            # print(t, 'y+ bottom')
+            if self.check_if_ball_leaving(x_v, normal_vector):
+                collided = True
+        elif x[1] < -CURVE_Y_3 and x[2] < CURVE_Z_3 and abs(x[0]) > GOAL_X and \
+                (abs(x[1]) - CURVE_Y_3) ** 2 + (x[2] - CURVE_Z_3) ** 2 > (CURVE_RADIUS_3 - self.ball_radius) ** 2:
+            surface_vector = np.array([0, CURVE_Y_3 - x[1], CURVE_Z_3 - x[2]])
+            normal_vector = surface_vector / np.sqrt(surface_vector.dot(surface_vector))
+            # print(t, x, normal_vector, surface_vector)
+            # print(t, 'y- bottom')
+            if self.check_if_ball_leaving(x_v, normal_vector):
+                collided = True
+        # bottom x axis
+        if x[0] > CURVE_X_2 and x[2] < CURVE_Z_2 and \
+                (abs(x[0]) - CURVE_X_2) ** 2 + (x[2] - CURVE_Z_2) ** 2 > (CURVE_RADIUS_2 - self.ball_radius) ** 2:
+            surface_vector = np.array([CURVE_X_2 - x[0], 0, CURVE_Z_2 - x[2]])
+            normal_vector = surface_vector / np.sqrt(surface_vector.dot(surface_vector))
+            # print(t, x, normal_vector, surface_vector)
+            # print(t, 'x+ bottom')
+            if self.check_if_ball_leaving(x_v, normal_vector):
+                collided = True
+        elif x[0] < -CURVE_X_2 and x[2] < CURVE_Z_2 and \
+                (abs(x[0]) - CURVE_X_2) ** 2 + (x[2] - CURVE_Z_2) ** 2 > (CURVE_RADIUS_2 - self.ball_radius) ** 2:
+            surface_vector = np.array([CURVE_X_2 - x[0], 0, CURVE_Z_2 - x[2]])
+            normal_vector = surface_vector / np.sqrt(surface_vector.dot(surface_vector))
+            # print(t, x, normal_vector, surface_vector)
+            # print(t, 'x- bottom')
+            if self.check_if_ball_leaving(x_v, normal_vector):
+                collided = True
+        # top y axis
+        if x[1] > CURVE_Y_1 and x[2] > CURVE_Z_1 and abs(x[0]) > GOAL_X and \
+                (abs(x[1]) - CURVE_Y_1) ** 2 + (x[2] - CURVE_Z_1) ** 2 > (CURVE_RADIUS_1 - self.ball_radius) ** 2:
+            surface_vector = np.array([0, CURVE_Y_1 - x[1], CURVE_Z_1 - x[2]])
+            normal_vector = surface_vector / np.sqrt(surface_vector.dot(surface_vector))
+            # print(t, x, normal_vector, surface_vector)
+            # print(t, 'y+ top')
+            if self.check_if_ball_leaving(x_v, normal_vector):
+                collided = True
+        elif x[1] < -CURVE_Y_1 and x[2] > CURVE_Z_1 and abs(x[0]) > GOAL_X and \
+                (abs(x[1]) - CURVE_Y_1) ** 2 + (x[2] - CURVE_Z_1) ** 2 > (CURVE_RADIUS_1 - self.ball_radius) ** 2:
+            surface_vector = np.array([0, CURVE_Y_1 - x[1], CURVE_Z_1 - x[2]])
+            normal_vector = surface_vector / np.sqrt(surface_vector.dot(surface_vector))
+            # print(t, x, normal_vector, surface_vector)
+            # print(t, 'y- top')
+            if self.check_if_ball_leaving(x_v, normal_vector):
+                collided = True
+        # top x axis
+        if x[0] > CURVE_X_1 and x[2] > CURVE_Z_1 and \
+                (abs(x[0]) - CURVE_X_1) ** 2 + (x[2] - CURVE_Z_1) ** 2 > (CURVE_RADIUS_1 - self.ball_radius) ** 2:
+            surface_vector = np.array([CURVE_X_1 - x[0], 0, CURVE_Z_1 - x[2]])
+            normal_vector = surface_vector / np.sqrt(surface_vector.dot(surface_vector))
+            # print(t, x, normal_vector, surface_vector)
+            # print(t, 'x+ top')
+            if self.check_if_ball_leaving(x_v, normal_vector):
+                collided = True
+        elif x[0] < -CURVE_X_1 and x[2] > CURVE_Z_1 and \
+                (abs(x[0]) - CURVE_X_1) ** 2 + (x[2] - CURVE_Z_1) ** 2 > (CURVE_RADIUS_1 - self.ball_radius) ** 2:
+            surface_vector = np.array([CURVE_X_2 - x[0], 0, CURVE_Z_1 - x[2]])
+            normal_vector = surface_vector / np.sqrt(surface_vector.dot(surface_vector))
+            # print(t, x, normal_vector, surface_vector)
+            # print(t, 'x- top')
+            if self.check_if_ball_leaving(x_v, normal_vector):
+                collided = True
         if x[2] < self.ball_radius:
             # floor
             normal_vector = np.array([0, 0, 1])
@@ -94,14 +182,54 @@ class Ball:
             if self.check_if_ball_leaving(x_v, normal_vector):
                 collided = True
         # back
-        if x[1] < -BACK_WALL_DISTANCE + self.ball_radius:
+        if x[1] < -BACK_WALL_DISTANCE + self.ball_radius and \
+                self.ball_radius < x[2] < CEILING_DISTANCE - self.ball_radius and \
+                (abs(x[0]) > GOAL_X - self.ball_radius or abs(x[2]) > GOAL_Z - self.ball_radius):
             normal_vector = np.array([0, 1, 0])
             if self.check_if_ball_leaving(x_v, normal_vector):
                 collided = True
-        elif x[1] > BACK_WALL_DISTANCE - self.ball_radius:
+        elif x[1] > BACK_WALL_DISTANCE - self.ball_radius and \
+                self.ball_radius < x[2] < CEILING_DISTANCE - self.ball_radius and \
+                (abs(x[0]) > GOAL_X - self.ball_radius or abs(x[2]) > GOAL_Z - self.ball_radius):
             normal_vector = np.array([0, -1, 0])
             if self.check_if_ball_leaving(x_v, normal_vector):
                 collided = True
+
+        # corner side
+        if abs(x[0]) + abs(x[1]) + self.ball_radius > CORNER_WALL_DISTANCE:
+            over_rt2 = 1 / np.sqrt(2)
+            if x[0] < 0 and x[1] < 0:
+                normal_vector = np.array([over_rt2, over_rt2, 0])
+                if self.check_if_ball_leaving(x_v, normal_vector):
+                    collided = True
+            elif x[0] < 0 and x[1] > 0:
+                normal_vector = np.array([over_rt2, -over_rt2, 0])
+                if self.check_if_ball_leaving(x_v, normal_vector):
+                    collided = True
+            elif x[0] > 0 and x[1] < 0:
+                normal_vector = np.array([-over_rt2, over_rt2, 0])
+                if self.check_if_ball_leaving(x_v, normal_vector):
+                    collided = True
+            elif x[0] > 0 and x[1] > 0:
+                normal_vector = np.array([-over_rt2, -over_rt2, 0])
+                if self.check_if_ball_leaving(x_v, normal_vector):
+                    collided = True
+
+
+        # # Top Ramp X-axis
+        # if abs(x) > wx / 2 - cR and z > cz and (abs(x) - cx) ** 2 + (z - cz) ** 2 > (cR - R) ** 2:
+        #     a = math.atan2(z - cz, abs(x) - cx) / pi * 180
+        #     return True, [0, (90 + a) * sign(x)]
+        #
+        # # Top Ramp Y-axis
+        # if abs(y) > cy and z > cz and (abs(y) - cy) ** 2 + (z - cz) ** 2 > (cR - R) ** 2:
+        #     a = math.atan2(z - cz, abs(y) - cy) / pi * 180
+        #     return True, [(90 + a) * sign(y), 0]
+        # # Bottom Ramp Y-axis
+        # elif abs(y) > cy3 and z < cz3 and abs(x) > gx / 2 - R / 2 and (abs(y) - cy3) ** 2 + (z - cz2) ** 2 > (
+        #             cR3 - R) ** 2:
+        # a = math.atan2(z - cz2, abs(y) - cy3) / pi * 180
+        # return True, [(90 + a) * sign(y), 0]
 
         if collided:
             state = (v, self.sim_vars['ang_vel'])
@@ -142,10 +270,30 @@ class Ball:
             ax.plot(self.df.loc[:, 't'], self.df.loc[:, axis_plots[i]], 'k.', ms=1)
             ax.plot(self.sim_data.loc[:, 't'], self.sim_data.loc[:, axis_plots[i]], 'r.', ms=1, alpha=0.7)
             ax.get_xaxis().set_visible(False)
+            ax.grid()
             # ax.get_yaxis().set_visible(False)
 
         plt.tight_layout()
         plt.show()
+
+    def save_sim_data(self):
+        fig, axes = plt.subplots(3, 3)
+        fig.set_size_inches(10, 6)
+        axes = axes.flatten()
+        axis_plots = ['x', 'y', 'z', 'vx', 'vy', 'vz', 'rotvx', 'rotvy', 'rotvz']
+        for i in range(len(axes)):
+            ax = axes[i]
+            ax.set_title(axis_plots[i])
+
+            ax.plot(self.df.loc[:, 't'], self.df.loc[:, axis_plots[i]], 'k.', ms=1)
+            ax.plot(self.sim_data.loc[:, 't'], self.sim_data.loc[:, axis_plots[i]], 'r.', ms=1, alpha=0.7)
+            ax.get_xaxis().set_visible(False)
+            ax.grid()
+            # ax.get_yaxis().set_visible(False)
+
+        plt.tight_layout()
+        save_file_path = os.path.splitext(self.file_path)[0] + '.png'
+        plt.savefig(save_file_path, dpi=300)
 
     def plot_trajectory(self, t, positions):
         plt.plot(t, positions.loc[:, 'z'], '-')
@@ -153,13 +301,30 @@ class Ball:
         # plt.show()
 
 
+def save_all_for_data():
+    for file_name in os.listdir(os.path.join(os.getcwd(), 'data')):
+        if file_name.endswith('.csv'):
+            file_path = os.path.join(os.getcwd(), 'data', file_name)
+            print(file_path)
+            Ball(file_path, show=False, save=True)
+
 if __name__ == '__main__':
     # file_name = "episode_000008.csv"
+    # file_name = "episode_000003.csv"  # y+ bottom ramp
+    # file_name = "episode_000012.csv"  # y+ bottom ramp
+    # file_name = "episode_000010.csv"  # x- bottom
+    # file_name = "episode_000015.csv"  # x- bottom
+    # file_name = "episode_000029.csv"  # x- bottom
+    # file_name = "episode_000035.csv"  # x- bottom
     # file_path = os.path.join(os.getcwd(), 'data', file_name)
     # Ball(file_path)
 
     for file_name in os.listdir(os.path.join(os.getcwd(), 'data')):
-        file_path = os.path.join(os.getcwd(), 'data', file_name)
-        print(file_path)
-        Ball(file_path)
-        # x = input('Press enter to continue...')
+        if file_name.endswith('.csv'):
+
+            file_path = os.path.join(os.getcwd(), 'data', file_name)
+            print(file_path)
+            Ball(file_path)
+            # x = input('Press enter to continue...')
+
+    # save_all_for_data()
