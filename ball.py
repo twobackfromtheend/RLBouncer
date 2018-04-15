@@ -15,6 +15,7 @@ class Ball:
     gravity = 650  # uu/s2
     air_resistance = 0.0305  # % loss per second
     ball_max_speed = 6000
+    ball_max_rotation_speed = 6
 
     def __init__(self, file_path):
         self.file_path = os.path.join(os.getcwd(), 'data', file_name)
@@ -113,6 +114,12 @@ class Ball:
         # if v > max speed: v = v
         if v.dot(v) > self.ball_max_speed ** 2:
             v = v / np.sqrt(v.dot(v)) * self.ball_max_speed
+
+        # if ang_vel > max rotation: normalise to 6
+        ang_vel = self.sim_vars['ang_vel']
+        if ang_vel.dot(ang_vel) > self.ball_max_rotation_speed:
+            ang_vel = ang_vel / np.sqrt(ang_vel.dot(ang_vel)) * self.ball_max_rotation_speed
+            self.sim_vars['ang_vel'] = ang_vel
         return np.concatenate((v, a))
 
     def check_if_ball_leaving(self, x_v, normal_vector):
@@ -133,7 +140,7 @@ class Ball:
             ax.plot(self.df.loc[:, 't'], self.df.loc[:, axis_plots[i]], 'k.', ms=1)
             ax.plot(self.sim_data.loc[:, 't'], self.sim_data.loc[:, axis_plots[i]], 'r.', ms=1, alpha=0.7)
             ax.get_xaxis().set_visible(False)
-            ax.get_yaxis().set_visible(False)
+            # ax.get_yaxis().set_visible(False)
 
         plt.tight_layout()
         plt.show()
@@ -145,7 +152,12 @@ class Ball:
 
 
 if __name__ == '__main__':
+    # file_name = "episode_000218.csv"
+    # file_path = os.path.join(os.getcwd(), 'data', file_name)
+    # Ball(file_path)
+
+
     for file_name in os.listdir(os.path.join(os.getcwd(), 'data')):
         file_path = os.path.join(os.getcwd(), 'data', file_name)
         Ball(file_path)
-        x = input('Press enter to continue...')
+        # x = input('Press enter to continue...')
