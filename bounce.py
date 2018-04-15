@@ -1,6 +1,4 @@
-import pandas as pd
 import numpy as np
-import os
 
 R = 91.25
 Y = 2.0
